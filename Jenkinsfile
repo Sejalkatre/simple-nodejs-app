@@ -122,12 +122,12 @@ to: "[sejalkatre021@gmail.com](mailto:sejalkatre021@gmail.com)"
 )
 }
 
-```
+
     failure {
         emailext(
             subject: "FAILED: ${JOB_NAME} Build #${BUILD_NUMBER}",
             body: """
-```
+
 
 Build Failed
 
