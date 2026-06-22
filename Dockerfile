@@ -21,6 +21,9 @@ ARG APP_VERSION
 ENV APP_NAME=$APP_NAME
 ENV APP_VERSION=$APP_VERSION
 
+LABEL app.name=$APP_NAME
+LABEL app.version=$APP_VERSION
+
 WORKDIR /app
 
 COPY --from=builder /app .
