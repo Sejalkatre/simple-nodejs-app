@@ -99,43 +99,52 @@ stages {
     }
 }
 
-post {
+ post {
 
     success {
-        emailext(
-            subject: "SUCCESS: ${JOB_NAME} Build #${BUILD_NUMBER}",
+        echo "✅ Pipeline Successful"
+        echo "Docker Image: ${IMAGE_NAME}:${env.NEW_TAG}"
+
+        mail(
+            to: 'sejalkatre021@gmail.com',
+            subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """
-Build Successful
+Pipeline Status : SUCCESS
 
-Application : ${APP_NAME}
-Version     : ${APP_VERSION}
+Job Name     : ${env.JOB_NAME}
+Build Number : ${env.BUILD_NUMBER}
+Docker Image : ${IMAGE_NAME}:${env.NEW_TAG}
 
-Docker Image:
-${DOCKER_IMAGE}
+GitOps repository updated successfully.
 
 Build URL:
-${BUILD_URL}
-""",
-            to: "sejalkatre021@gmail.com"
+${env.BUILD_URL}
+"""
         )
     }
 
     failure {
-        emailext(
-            subject: "FAILED: ${JOB_NAME} Build #${BUILD_NUMBER}",
+        echo "❌ Pipeline Failed"
+
+        mail(
+            to: 'sejalkatre021@gmail.com',
+            subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             body: """
-Build Failed
+Pipeline Status : FAILURE
 
-Job Name:
-${JOB_NAME}
+Job Name     : ${env.JOB_NAME}
+Build Number : ${env.BUILD_NUMBER}
 
-Build Number:
-${BUILD_NUMBER}
+Please check the Jenkins console logs.
 
 Build URL:
-${BUILD_URL}
-""",
-            to: "sejalkatre021@gmail.com"
+${env.BUILD_URL}
+"""
         )
     }
+
+    always {
+        cleanWs()
+    }
+}
 }
