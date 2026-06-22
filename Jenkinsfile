@@ -105,8 +105,6 @@ post {
         emailext(
             subject: "SUCCESS: ${JOB_NAME} Build #${BUILD_NUMBER}",
             body: """
-```
-
 Build Successful
 
 Application : ${APP_NAME}
@@ -118,17 +116,14 @@ ${DOCKER_IMAGE}
 Build URL:
 ${BUILD_URL}
 """,
-to: "[sejalkatre021@gmail.com](mailto:sejalkatre021@gmail.com)"
-)
-}
-
+            to: "sejalkatre021@gmail.com"
+        )
+    }
 
     failure {
         emailext(
             subject: "FAILED: ${JOB_NAME} Build #${BUILD_NUMBER}",
             body: """
-
-
 Build Failed
 
 Job Name:
@@ -140,9 +135,7 @@ ${BUILD_NUMBER}
 Build URL:
 ${BUILD_URL}
 """,
-to: "[sejalkatre021@gmail.com](mailto:sejalkatre021@gmail.com)"
-)
+            to: "sejalkatre021@gmail.com"
+        )
+    }
 }
-}
-}
-
