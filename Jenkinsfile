@@ -6,7 +6,6 @@ agent any
 environment {
     APP_NAME = "simple-nodejs-app"
     APP_VERSION = "1.0"
-
     IMAGE_TAG = "${BUILD_NUMBER}"
     DOCKER_IMAGE = "sejalkatre/simple-nodejs-app:${IMAGE_TAG}"
 }
@@ -26,10 +25,10 @@ stages {
     stage('Build Image') {
         steps {
             sh """
-            docker build \
-            --build-arg APP_NAME=${APP_NAME} \
-            --build-arg APP_VERSION=${APP_VERSION} \
-            -t ${DOCKER_IMAGE} .
+                docker build \
+                --build-arg APP_NAME=${APP_NAME} \
+                --build-arg APP_VERSION=${APP_VERSION} \
+                -t ${DOCKER_IMAGE} .
             """
         }
     }
@@ -43,9 +42,8 @@ stages {
                     passwordVariable: 'DOCKER_PASS'
                 )
             ]) {
-
                 sh '''
-                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                 '''
             }
         }
@@ -55,7 +53,7 @@ stages {
         steps {
             retry(3) {
                 sh '''
-                docker push $DOCKER_IMAGE
+                    docker push $DOCKER_IMAGE
                 '''
             }
         }
@@ -76,7 +74,6 @@ stages {
     stage('Update Manifest') {
         steps {
             dir('manifest-repo') {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'github-creds',
@@ -84,18 +81,17 @@ stages {
                         passwordVariable: 'GIT_PASS'
                     )
                 ]) {
-
                     sh """
-                    sed -i 's|image:.*|image: sejalkatre/simple-nodejs-app:${IMAGE_TAG}|g' k8s/deployment.yaml
+                        sed -i 's|image:.*|image: sejalkatre/simple-nodejs-app:${IMAGE_TAG}|g' k8s/deployment.yaml
 
-                    git config user.name "jenkins"
-                    git config user.email "jenkins@local"
+                        git config user.name "jenkins"
+                        git config user.email "jenkins@local"
 
-                    git add k8s/
+                        git add k8s/
 
-                    git commit -m "Updated image to build ${IMAGE_TAG}" || echo "No changes"
+                        git commit -m "Updated image to build ${IMAGE_TAG}" || echo "No changes"
 
-                    git push https://\$GIT_USER:\$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
+                        git push https://\$GIT_USER:\$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
                     """
                 }
             }
