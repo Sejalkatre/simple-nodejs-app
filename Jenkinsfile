@@ -7,6 +7,7 @@ environment {
     APP_NAME = "simple-nodejs-app"
     APP_VERSION = "1.0"
     IMAGE_TAG = "${BUILD_NUMBER}"
+    IMAGE_NAME = "sejalkatre/simple-nodejs-app"
     DOCKER_IMAGE = "sejalkatre/simple-nodejs-app:${IMAGE_TAG}"
 }
 
