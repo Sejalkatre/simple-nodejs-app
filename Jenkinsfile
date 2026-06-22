@@ -4,7 +4,6 @@ pipeline {
 agent any
 
 environment {
-
     APP_NAME = "simple-nodejs-app"
     APP_VERSION = "1.0"
 
@@ -16,15 +15,16 @@ stages {
 
     stage('Checkout Code') {
         steps {
-            git branch: 'main',
+            git(
+                branch: 'main',
                 credentialsId: 'github-creds',
                 url: 'https://github.com/Sejalkatre/simple-nodejs-app.git'
+            )
         }
     }
 
     stage('Build Image') {
         steps {
-
             sh """
             docker build \
             --build-arg APP_NAME=${APP_NAME} \
@@ -36,12 +36,13 @@ stages {
 
     stage('Login DockerHub') {
         steps {
-
-            withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )
+            ]) {
 
                 sh '''
                 echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
@@ -52,9 +53,7 @@ stages {
 
     stage('Push Image') {
         steps {
-
             retry(3) {
-
                 sh '''
                 docker push $DOCKER_IMAGE
                 '''
@@ -64,29 +63,30 @@ stages {
 
     stage('Checkout Manifest Repo') {
         steps {
-
             dir('manifest-repo') {
-
-                git branch: 'main',
+                git(
+                    branch: 'main',
                     credentialsId: 'github-creds',
                     url: 'https://github.com/Sejalkatre/simple-nodejs-manifests.git'
+                )
             }
         }
     }
 
     stage('Update Manifest') {
         steps {
-
             dir('manifest-repo') {
 
-                withCredentials([usernamePassword(
-                    credentialsId: 'github-creds',
-                    usernameVariable: 'GIT_USER',
-                    passwordVariable: 'GIT_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-creds',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_PASS'
+                    )
+                ]) {
 
-                    sh '''
-                    sed -i "s|image:.*|image: sejalkatre/simple-nodejs-app:${IMAGE_TAG}|g" k8s/deployment.yaml
+                    sh """
+                    sed -i 's|image:.*|image: sejalkatre/simple-nodejs-app:${IMAGE_TAG}|g' k8s/deployment.yaml
 
                     git config user.name "jenkins"
                     git config user.email "jenkins@local"
@@ -95,8 +95,8 @@ stages {
 
                     git commit -m "Updated image to build ${IMAGE_TAG}" || echo "No changes"
 
-                    git push https://$GIT_USER:$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
-                    '''
+                    git push https://\$GIT_USER:\$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
+                    """
                 }
             }
         }
@@ -106,7 +106,6 @@ stages {
 post {
 
     success {
-
         emailext(
             subject: "SUCCESS: ${JOB_NAME} Build #${BUILD_NUMBER}",
             body: """
@@ -123,13 +122,12 @@ ${DOCKER_IMAGE}
 Build URL:
 ${BUILD_URL}
 """,
-to: "[your-email@gmail.com](mailto:your-email@gmail.com)"
+to: "[sejalkatre021@gmail.com](mailto:sejalkatre021@gmail.com)"
 )
 }
 
 ```
     failure {
-
         emailext(
             subject: "FAILED: ${JOB_NAME} Build #${BUILD_NUMBER}",
             body: """
@@ -146,7 +144,7 @@ ${BUILD_NUMBER}
 Build URL:
 ${BUILD_URL}
 """,
-to: "[your-email@gmail.com](mailto:your-email@gmail.com)"
+to: "[sejalkatre021@gmail.com](mailto:sejalkatre021@gmail.com)"
 )
 }
 }
