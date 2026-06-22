@@ -1,13 +1,11 @@
 pipeline {
-
-
 agent any
 
+
 environment {
-    APP_NAME = "simple-nodejs-app"
-    APP_VERSION = "1.0"
-    IMAGE_TAG = "${BUILD_NUMBER}"
-    IMAGE_NAME = "sejalkatre/simple-nodejs-app"
+    APP_NAME     = "simple-nodejs-app"
+    APP_VERSION  = "1.0"
+    IMAGE_TAG    = "${BUILD_NUMBER}"
     DOCKER_IMAGE = "sejalkatre/simple-nodejs-app:${IMAGE_TAG}"
 }
 
@@ -15,11 +13,9 @@ stages {
 
     stage('Checkout Code') {
         steps {
-            git(
-                branch: 'main',
+            git branch: 'main',
                 credentialsId: 'github-creds',
                 url: 'https://github.com/Sejalkatre/simple-nodejs-app.git'
-            )
         }
     }
 
@@ -43,31 +39,23 @@ stages {
                     passwordVariable: 'DOCKER_PASS'
                 )
             ]) {
-                sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                '''
+                sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
             }
         }
     }
 
     stage('Push Image') {
         steps {
-            retry(3) {
-                sh '''
-                    docker push $DOCKER_IMAGE
-                '''
-            }
+            sh 'docker push ${DOCKER_IMAGE}'
         }
     }
 
     stage('Checkout Manifest Repo') {
         steps {
             dir('manifest-repo') {
-                git(
-                    branch: 'main',
+                git branch: 'main',
                     credentialsId: 'github-creds',
                     url: 'https://github.com/Sejalkatre/simple-nodejs-manifests.git'
-                )
             }
         }
     }
@@ -83,14 +71,13 @@ stages {
                     )
                 ]) {
                     sh """
-                        sed -i 's|image:.*|image: sejalkatre/simple-nodejs-app:${IMAGE_TAG}|g' k8s/deployment.yaml
+                        sed -i 's|image:.*|image: ${DOCKER_IMAGE}|g' k8s/deployment.yaml
 
                         git config user.name "jenkins"
                         git config user.email "jenkins@local"
 
-                        git add k8s/
-
-                        git commit -m "Updated image to build ${IMAGE_TAG}" || echo "No changes"
+                        git add .
+                        git commit -m "Updated image to build ${IMAGE_TAG}" || true
 
                         git push https://\$GIT_USER:\$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
                     """
@@ -100,52 +87,50 @@ stages {
     }
 }
 
- post {
+post {
 
     success {
-        echo "✅ Pipeline Successful"
-        echo "Docker Image: ${IMAGE_NAME}:${env.NEW_TAG}"
-
-        mail(
+        emailext(
             to: 'sejalkatre021@gmail.com',
-            subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            subject: "SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
             body: """
-Pipeline Status : SUCCESS
+```
 
-Job Name     : ${env.JOB_NAME}
-Build Number : ${env.BUILD_NUMBER}
-Docker Image : ${IMAGE_NAME}:${env.NEW_TAG}
+Build Successful
 
-GitOps repository updated successfully.
+Application : ${APP_NAME}
+Version     : ${APP_VERSION}
+Image       : ${DOCKER_IMAGE}
 
 Build URL:
-${env.BUILD_URL}
+${BUILD_URL}
 """
-        )
-    }
+)
+}
+
 
     failure {
-        echo "❌ Pipeline Failed"
-
-        mail(
+        emailext(
             to: 'sejalkatre021@gmail.com',
-            subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            subject: "FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
             body: """
-Pipeline Status : FAILURE
+```
 
-Job Name     : ${env.JOB_NAME}
-Build Number : ${env.BUILD_NUMBER}
+Build Failed
 
-Please check the Jenkins console logs.
+Job Name     : ${JOB_NAME}
+Build Number : ${BUILD_NUMBER}
 
 Build URL:
-${env.BUILD_URL}
+${BUILD_URL}
 """
-        )
-    }
+)
+}
 
     always {
         cleanWs()
     }
 }
+
+
 }
