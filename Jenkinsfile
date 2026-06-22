@@ -76,6 +76,8 @@ stages {
                         git config user.name "jenkins"
                         git config user.email "jenkins@local"
 
+                        
+                        git init
                         git add .
                         git commit -m "Updated image to build ${IMAGE_TAG}" || true
 
