@@ -79,7 +79,7 @@ stages {
                         
                         git init
                         git add .
-                        git commit -m "Updated image to build ${IMAGE_TAG}" || true
+                        git commit -m "Updated image to build ${IMAGE_TAG}" 
 
                         git push https://\$GIT_USER:\$GIT_PASS@github.com/Sejalkatre/simple-nodejs-manifests.git main
                     """
